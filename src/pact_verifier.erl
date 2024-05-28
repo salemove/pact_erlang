@@ -202,7 +202,6 @@ verify_pacts(VerifierRef, ProviderOpts, ProviderPortDetails) ->
                 {Output, OutputLog} = pact_utils:run_executable_async(
                     EscriptPath ++ " pactffi_nif verify_file_pacts " ++ ArgsString
                 ),
-                io:format(OutputLog),
                 Output
         end,
     Output2 =
