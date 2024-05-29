@@ -699,12 +699,19 @@ static ERL_NIF_TERM verify_via_file(ErlNifEnv *env, int argc, const ERL_NIF_TERM
     pactffi_verifier_set_no_pacts_is_error(verifierhandle, 0);
     pactffi_verifier_set_provider_info(verifierhandle, name, scheme, host, port, path);
     pactffi_verifier_add_provider_transport(verifierhandle, protocol, port, path, scheme);
-    if (!enif_is_binary(env, argv[9]))
+
+    char *auth_token_type = convert_erl_binary_to_c_string(env, argv[9]);
+    char *auth_token_value = convert_erl_binary_to_c_string(env, argv[10]);
+    char *auth_header = (char *)malloc((strlen(auth_token_type) + strlen(auth_token_value) + 1) * sizeof(char));
+    sprintf(auth_header, "%s %s", auth_token_type, auth_token_value);
+    pactffi_verifier_add_custom_header(verifierhandle, "authorization", auth_header);
+    free(auth_header);
+
+    if (!enif_is_binary(env, argv[11]))
     {
         return enif_make_badarg(env);
     }
-
-    char *state_path = convert_erl_binary_to_c_string(env, argv[9]);
+    char *state_path = convert_erl_binary_to_c_string(env, argv[11]);
     if (state_path[0] != '\0')
     {
         pactffi_verifier_set_provider_state(verifierhandle, state_path, 0, 1);
@@ -875,10 +882,10 @@ static ErlNifFunc nif_funcs[] =
         {"msg_given_with_param", 4, msg_given_with_param},
         {"msg_with_contents", 3, msg_with_contents},
         {"reify_message", 1, reify_message},
-        {"schedule_async_file_verify", 10, schedule_async_file_verify},
+        {"schedule_async_file_verify", 12, schedule_async_file_verify},
         {"schedule_async_broker_verify", 15, schedule_async_broker_verify},
         {"verify_via_broker", 15, verify_via_broker},
-        {"verify_via_file", 10, verify_via_file}
+        {"verify_via_file", 12, verify_via_file}
     };
 
 ERL_NIF_INIT(pactffi_nif, nif_funcs, NULL, NULL, NULL, NULL)

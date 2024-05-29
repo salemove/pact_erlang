@@ -161,6 +161,8 @@ verify_pacts(VerifierRef, ProviderOpts, ProviderPortDetails) ->
     } = ProviderOpts,
     Protocol = maps:get(protocol, ProviderOpts, <<"http">>),
     BaseUrl = maps:get(base_url, ProviderOpts, <<"/">>),
+    AuthTokenType = maps:get(auth_token_type, ProviderOpts, <<"Bearer">>),
+    AuthTokenValue = maps:get(auth_token_value, ProviderOpts, <<"Token">>),
     StateChangeUrl = maps:get(state_change_url, ProviderOpts, <<"">>),
     Scheme = maps:get(scheme, ProviderOpts, <<"http">>),
     FilePath = maps:get(file_path, PactSourceOpts, undefined),
@@ -182,6 +184,8 @@ verify_pacts(VerifierRef, ProviderOpts, ProviderPortDetails) ->
                         Branch,
                         FilePath,
                         Protocol,
+                        AuthTokenType,
+                        AuthTokenValue,
                         StateChangeUrl
                     ],
                 ArgsString =

@@ -24,7 +24,7 @@ main([Module, Function | Args]) ->
                 {[], 0},
                 Args
             ),
-            case length(AList) < 10 of
+            case length(AList) < 12 of
                 true ->
                     AList ++ [<<"">>];
                 false ->
