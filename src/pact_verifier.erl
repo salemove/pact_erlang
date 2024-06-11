@@ -199,9 +199,10 @@ verify_pacts(VerifierRef, ProviderOpts, ProviderPortDetails) ->
                         "",
                         Args
                     ),
-                {Output, _OutputLog} = pact_utils:run_executable_async(
+                {Output, OutputLog} = pact_utils:run_executable_async(
                     EscriptPath ++ " pactffi_nif verify_file_pacts " ++ ArgsString
                 ),
+                io:format(OutputLog),
                 Output
         end,
     Output2 =
@@ -246,9 +247,10 @@ verify_pacts(VerifierRef, ProviderOpts, ProviderPortDetails) ->
                         "",
                         Args1
                     ),
-                {Output3, _OutputLog3} = pact_utils:run_executable_async(
+                {Output3, OutputLog3} = pact_utils:run_executable_async(
                     EscriptPath ++ " pactffi_nif verify_broker_pacts " ++ ArgsString1
                 ),
+                io:format(OutputLog3),
                 Output3
         end,
     case Protocol of
