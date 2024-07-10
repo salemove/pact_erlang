@@ -36,7 +36,7 @@ main([Module, Function | Args]) ->
                 fun(Arg, {Acc, CountAcc}) ->
                     A =
                     case CountAcc of
-                        Num when Num == 3 orelse Num == 10 ->
+                        Num when Num == 3 orelse Num == 10 orelse Num == 14 ->
                             list_to_integer(Arg);
                         _ ->
                             list_to_binary(Arg)
@@ -46,7 +46,7 @@ main([Module, Function | Args]) ->
                 {[], 0},
                 Args
             ),
-            case length(AList1) < 14 of
+            case length(AList1) < 15 of
                 true ->
                     AList1 ++ [<<"">>];
                 false ->

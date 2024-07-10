@@ -35,10 +35,10 @@
     reify_message/1,
     get_reified_message/1,
     verify_file_pacts/10,
-    verify_broker_pacts/14,
-    schedule_async_broker_verify/15,
+    verify_broker_pacts/15,
+    schedule_async_broker_verify/16,
     schedule_async_file_verify/10,
-    verify_via_broker/15,
+    verify_via_broker/16,
     verify_via_file/10
 ]).
 
@@ -71,8 +71,8 @@
     msg_with_contents/3,
     reify_message/1,
     schedule_async_file_verify/10,
-    schedule_async_broker_verify/15,
-    verify_via_broker/15,
+    schedule_async_broker_verify/16,
+    verify_via_broker/16,
     verify_via_file/10
 ]).
 -on_load(init/0).
@@ -189,13 +189,13 @@ reify_message(_) ->
 schedule_async_file_verify(_1, _2, _3, _4, _5, _6, _7, _8, _9, _10) ->
     erlang:nif_error("NIF library not loaded").
 
-schedule_async_broker_verify(_1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15) ->
+schedule_async_broker_verify(_1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16) ->
     erlang:nif_error("NIF library not loaded").
 
 verify_via_file(_1, _2, _3, _4, _5, _6, _7, _8, _9, _10) ->
     erlang:nif_error("NIF library not loaded").
 
-verify_via_broker(_1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15) ->
+verify_via_broker(_1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16) ->
     erlang:nif_error("NIF library not loaded").
 
 verify_file_pacts(
@@ -209,7 +209,7 @@ verify_file_pacts(
 %         Output
 % end.
 % verify_via_file(
-%     Name, Scheme, Host, Port, Path, Version, Branch, FilePath, Protocol, Pid, StatePath
+%     Name, Scheme, Host, Port, Path, Version, Branch, FilePath, Protocol, Pid, StatePath, SkipPublish
 % ).
 
 verify_broker_pacts(
@@ -226,7 +226,8 @@ verify_broker_pacts(
     EnablePending,
     ConsumerVersionSelectors,
     Protocol,
-    StatePath
+    StatePath,
+    SkipPublish
 ) ->
     TotalConsumerVersionSelectors = 0,
     verify_via_broker(
@@ -244,7 +245,8 @@ verify_broker_pacts(
         ConsumerVersionSelectors,
         TotalConsumerVersionSelectors,
         Protocol,
-        StatePath
+        StatePath,
+        SkipPublish
     ).
 % receive
     %     Output ->
