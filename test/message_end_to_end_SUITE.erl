@@ -174,7 +174,7 @@ verify_producer(_Config) ->
     Output2 = pact_verifier:verify(VerifierRef2),
     ProviderOpts3 = ProviderOpts#{pact_source_opts => maps:update(broker_url, WrongBrokerUrl, BrokerConfigs)},
     {ok, VerifierRef3} = pact_verifier:start_verifier(Name, ProviderOpts3),
-    Output3 = pact_verifier:verify(VerifierRef3),
+    {Output3, _, _} = pact_verifier:verify_v2(VerifierRef3),
     ?assertEqual(0, Output1),
     ?assertEqual(0, Output),
     ?assertEqual(1, Output2),

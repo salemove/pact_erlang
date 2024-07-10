@@ -145,6 +145,8 @@ ProviderOpts = #{
 },
 {ok, VerfierRef} = pact_verifier:start_verifier(Name, ProviderOpts),
 Output = pact_verifier:verify(VerfierRef).
+%% or you can use the verify_v2/1 which returns logs of file and url based %% pacts
+{Output, OutputLog1, OutputLog2} = pact_verifier:verify_v2(VerfierRef)
 
 ```
 
