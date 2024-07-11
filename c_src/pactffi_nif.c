@@ -808,23 +808,17 @@ static ERL_NIF_TERM verify_via_broker(ErlNifEnv *env, int argc, const ERL_NIF_TE
         consumer_version_selectors[i] = serialized;
     }
 
-    if (!enif_is_number(env, argv[12]))
+    if (!enif_is_binary(env, argv[12]))
     {
         return enif_make_badarg(env);
     }
-    int consumer_version_selectors_len = convert_erl_int_to_c_int(env, argv[12]);
-
-    if (!enif_is_binary(env, argv[13]))
+    char *protocol = convert_erl_binary_to_c_string(env, argv[12]);
+    char *state_path = convert_erl_binary_to_c_string(env, argv[13]);
+    if (!enif_is_number(env, argv[14]))
     {
         return enif_make_badarg(env);
     }
-    char *protocol = convert_erl_binary_to_c_string(env, argv[13]);
-    char *state_path = convert_erl_binary_to_c_string(env, argv[14]);
-    if (!enif_is_number(env, argv[15]))
-    {
-        return enif_make_badarg(env);
-    }
-    int skip_publish = convert_erl_int_to_c_int(env, argv[15]);
+    int skip_publish = convert_erl_int_to_c_int(env, argv[14]);
 
     struct VerifierHandle *verifierhandle;
     verifierhandle = pactffi_verifier_new_for_application(name, version);
@@ -910,8 +904,8 @@ static ErlNifFunc nif_funcs[] =
         {"msg_with_contents", 3, msg_with_contents},
         {"reify_message", 1, reify_message},
         {"schedule_async_file_verify", 10, schedule_async_file_verify},
-        {"schedule_async_broker_verify", 16, schedule_async_broker_verify},
-        {"verify_via_broker", 16, verify_via_broker},
+        {"schedule_async_broker_verify", 15, schedule_async_broker_verify},
+        {"verify_via_broker", 15, verify_via_broker},
         {"verify_via_file", 10, verify_via_file}
     };
 
