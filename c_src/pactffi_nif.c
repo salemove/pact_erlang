@@ -819,6 +819,7 @@ static ERL_NIF_TERM verify_via_broker(ErlNifEnv *env, int argc, const ERL_NIF_TE
         return enif_make_badarg(env);
     }
     int skip_publish = convert_erl_int_to_c_int(env, argv[14]);
+    char *include_wip_pacts_since = convert_erl_binary_to_c_string(env, argv[15]);
 
     struct VerifierHandle *verifierhandle;
     verifierhandle = pactffi_verifier_new_for_application(name, version);
@@ -845,7 +846,7 @@ static ERL_NIF_TERM verify_via_broker(ErlNifEnv *env, int argc, const ERL_NIF_TE
         broker_password,
         NULL,
         enable_pending,
-        NULL,
+        include_wip_pacts_since,
         NULL,
         -1,
         branch,
@@ -904,8 +905,8 @@ static ErlNifFunc nif_funcs[] =
         {"msg_with_contents", 3, msg_with_contents},
         {"reify_message", 1, reify_message},
         {"schedule_async_file_verify", 10, schedule_async_file_verify},
-        {"schedule_async_broker_verify", 15, schedule_async_broker_verify},
-        {"verify_via_broker", 15, verify_via_broker},
+        {"schedule_async_broker_verify", 16, schedule_async_broker_verify},
+        {"verify_via_broker", 16, verify_via_broker},
         {"verify_via_file", 10, verify_via_file}
     };
 
