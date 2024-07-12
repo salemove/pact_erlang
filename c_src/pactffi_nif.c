@@ -4,6 +4,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "cJSON.h"
 
 static const char *const * binary_to_char_array(ErlNifEnv* env, const ERL_NIF_TERM binary_term) {
     ErlNifBinary binary;
@@ -796,20 +797,29 @@ static ERL_NIF_TERM verify_via_broker(ErlNifEnv *env, int argc, const ERL_NIF_TE
     {
         return enif_make_badarg(env);
     }
-    const char *const *consumer_version_selectors = binary_to_char_array(env, argv[11]);
+    char *consumer_version_selectors_string = convert_erl_binary_to_c_string(env, argv[11]);
+    const char *consumer_version_selectors_array[] = { consumer_version_selectors_string };
+    cJSON *consumer_version_selectors_json = cJSON_Parse(consumer_version_selectors_array[0]);
+    int consumer_version_selectors_length = cJSON_GetArraySize(consumer_version_selectors_json);
+    char **consumer_version_selectors = (char **)malloc(consumer_version_selectors_length * sizeof(char *));
+    for (int i = 0; i < consumer_version_selectors_length; i++) {
+        cJSON *item = cJSON_GetArrayItem(consumer_version_selectors_json, i);
+        char *serialized = cJSON_PrintUnformatted(item);
+        consumer_version_selectors[i] = serialized;
+    }
 
-    if (!enif_is_number(env, argv[12]))
+    if (!enif_is_binary(env, argv[12]))
     {
         return enif_make_badarg(env);
     }
-    int consumer_version_selectors_len = convert_erl_int_to_c_int(env, argv[12]);
-
-    if (!enif_is_binary(env, argv[13]))
+    char *protocol = convert_erl_binary_to_c_string(env, argv[12]);
+    char *state_path = convert_erl_binary_to_c_string(env, argv[13]);
+    if (!enif_is_number(env, argv[14]))
     {
         return enif_make_badarg(env);
     }
-    char *protocol = convert_erl_binary_to_c_string(env, argv[13]);
-    char *state_path = convert_erl_binary_to_c_string(env, argv[14]);
+    int skip_publish = convert_erl_int_to_c_int(env, argv[14]);
+    char *include_wip_pacts_since = convert_erl_binary_to_c_string(env, argv[15]);
 
     struct VerifierHandle *verifierhandle;
     verifierhandle = pactffi_verifier_new_for_application(name, version);
@@ -823,9 +833,28 @@ static ERL_NIF_TERM verify_via_broker(ErlNifEnv *env, int argc, const ERL_NIF_TE
     {
         pactffi_verifier_set_provider_state(verifierhandle, state_path, 0, 1);
     }
-    pactffi_verifier_set_verification_options(verifierhandle, 0, 5000),
-    pactffi_verifier_set_publish_options(verifierhandle, version, NULL, NULL, -1, branch);
-    pactffi_verifier_broker_source_with_selectors(verifierhandle, broker_url, broker_username, broker_password, NULL, enable_pending, NULL, NULL, -1, branch, consumer_version_selectors, consumer_version_selectors_len, NULL, -1);
+    pactffi_verifier_set_verification_options(verifierhandle, 0, 5000);
+
+    if (skip_publish == 0) {
+        pactffi_verifier_set_publish_options(verifierhandle, version, NULL, NULL, -1, branch);
+    }
+
+    pactffi_verifier_broker_source_with_selectors(
+        verifierhandle,
+        broker_url,
+        broker_username,
+        broker_password,
+        NULL,
+        enable_pending,
+        include_wip_pacts_since,
+        NULL,
+        -1,
+        branch,
+        (const char *const *)consumer_version_selectors,
+        consumer_version_selectors_length,
+        NULL,
+        -1
+    );
     setenv("PACT_DO_NOT_TRACK", "true", 1);
 
     int verification_output = pactffi_verifier_execute(verifierhandle);
@@ -876,8 +905,8 @@ static ErlNifFunc nif_funcs[] =
         {"msg_with_contents", 3, msg_with_contents},
         {"reify_message", 1, reify_message},
         {"schedule_async_file_verify", 10, schedule_async_file_verify},
-        {"schedule_async_broker_verify", 15, schedule_async_broker_verify},
-        {"verify_via_broker", 15, verify_via_broker},
+        {"schedule_async_broker_verify", 16, schedule_async_broker_verify},
+        {"verify_via_broker", 16, verify_via_broker},
         {"verify_via_file", 10, verify_via_file}
     };
 

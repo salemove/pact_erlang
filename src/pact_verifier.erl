@@ -162,6 +162,8 @@ verify_pacts(VerifierRef, ProviderOpts, ProviderPortDetails) ->
     Protocol = maps:get(protocol, ProviderOpts, <<"http">>),
     BaseUrl = maps:get(base_url, ProviderOpts, <<"/">>),
     StateChangeUrl = maps:get(state_change_url, ProviderOpts, <<"">>),
+    IncludeWipPactsSince = maps:get(include_wip_pacts_since, ProviderOpts, <<"">>),
+    SkipPublish = maps:get(skip_publish, ProviderOpts, <<"0">>),
     Scheme = maps:get(scheme, ProviderOpts, <<"http">>),
     FilePath = maps:get(file_path, PactSourceOpts, undefined),
     PactBrokerUrl = maps:get(broker_url, PactSourceOpts, undefined),
@@ -230,7 +232,9 @@ verify_pacts(VerifierRef, ProviderOpts, ProviderPortDetails) ->
                     EnablePending,
                     ConsumerVersionSelectors,
                     Protocol,
-                    StateChangeUrl
+                    StateChangeUrl,
+                    SkipPublish,
+                    IncludeWipPactsSince
                 ],
                 ArgsString1 =
                     lists:foldl(
