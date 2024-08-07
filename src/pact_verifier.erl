@@ -212,12 +212,10 @@ verify_pacts(VerifierRef, ProviderOpts, ProviderPortDetails) ->
             undefined ->
                 0;
             _ ->
-                #{
-                    broker_username := BrokerUser,
-                    broker_password := BrokerPassword,
-                    enable_pending := EnablePending,
-                    consumer_version_selectors := ConsumerVersionSelectors
-                } = PactSourceOpts,
+                BrokerUser = maps:get(broker_username, PactSourceOpts, <<"username">>),
+                BrokerPassword = maps:get(broker_password, PactSourceOpts, <<"password">>),
+                EnablePending = maps:get(enable_pending, PactSourceOpts, <<"0">>),
+                ConsumerVersionSelectors = maps:get(consumer_version_selectors, PactSourceOpts, undefined),
                 Args1 = [
                     Name,
                     Scheme,
