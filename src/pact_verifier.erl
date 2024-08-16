@@ -168,7 +168,10 @@ verify_pacts(VerifierRef, ProviderOpts, ProviderPortDetails) ->
     FilePath = maps:get(file_path, PactSourceOpts, undefined),
     PactUrl = maps:get(pact_url, PactSourceOpts, undefined),
     PactBrokerUrl = maps:get(broker_url, PactSourceOpts, undefined),
+    BrokerUser = maps:get(broker_username, PactSourceOpts, <<"username">>),
+    BrokerPassword = maps:get(broker_password, PactSourceOpts, <<"password">>),
     EscriptPath = code:priv_dir(pact_erlang) ++ "/pact_escript.escript",
+    
     FilePathOutput =
         case FilePath of
             undefined ->
@@ -224,7 +227,9 @@ verify_pacts(VerifierRef, ProviderOpts, ProviderPortDetails) ->
                         Branch,
                         PactUrl,
                         Protocol,
-                        StateChangeUrl
+                        StateChangeUrl,
+                        BrokerUser,
+                        BrokerPassword
                     ],
                 PactUrlArgsString =
                     lists:foldl(
@@ -252,8 +257,6 @@ verify_pacts(VerifierRef, ProviderOpts, ProviderPortDetails) ->
             undefined ->
                 0;
             _ ->
-                BrokerUser = maps:get(broker_username, PactSourceOpts, <<"username">>),
-                BrokerPassword = maps:get(broker_password, PactSourceOpts, <<"password">>),
                 EnablePending = maps:get(enable_pending, PactSourceOpts, <<"0">>),
                 ConsumerVersionSelectors = maps:get(consumer_version_selectors, PactSourceOpts, undefined),
                 PactBrokerArgs = [
