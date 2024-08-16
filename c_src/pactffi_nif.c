@@ -729,6 +729,99 @@ static ERL_NIF_TERM verify_via_file(ErlNifEnv *env, int argc, const ERL_NIF_TERM
     return enif_make_int(env, output);
 }
 
+static ERL_NIF_TERM verify_via_url(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+    if (!enif_is_binary(env, argv[0]))
+    {
+        return enif_make_badarg(env);
+    }
+    char *name = convert_erl_binary_to_c_string(env, argv[0]);
+    if (!enif_is_binary(env, argv[1]))
+    {
+        return enif_make_badarg(env);
+    }
+    char *scheme = convert_erl_binary_to_c_string(env, argv[1]);
+    if (!enif_is_binary(env, argv[2]))
+    {
+        return enif_make_badarg(env);
+    }
+    char *host = convert_erl_binary_to_c_string(env, argv[2]);
+    if (!enif_is_number(env, argv[3]))
+    {
+        return enif_make_badarg(env);
+    }
+    int port = convert_erl_int_to_c_int(env, argv[3]);
+    printf("Port is %d\n", port);
+    if (!enif_is_binary(env, argv[4]))
+    {
+        return enif_make_badarg(env);
+    }
+    char *path = convert_erl_binary_to_c_string(env, argv[4]);
+
+    if (!enif_is_binary(env, argv[5]))
+    {
+        return enif_make_badarg(env);
+    }
+    char *version = convert_erl_binary_to_c_string(env, argv[5]);
+
+    if (!enif_is_binary(env, argv[6]))
+    {
+        return enif_make_badarg(env);
+    }
+    char *branch = convert_erl_binary_to_c_string(env, argv[6]);
+
+    if (!enif_is_binary(env, argv[7]))
+    {
+        return enif_make_badarg(env);
+    }
+    char *pact_url = convert_erl_binary_to_c_string(env, argv[7]);
+
+    if (!enif_is_binary(env, argv[8]))
+    {
+        return enif_make_badarg(env);
+    }
+    char *protocol = convert_erl_binary_to_c_string(env, argv[8]);
+
+    struct VerifierHandle *verifierhandle;
+    verifierhandle = pactffi_verifier_new_for_application(name, version);
+    pactffi_verifier_set_no_pacts_is_error(verifierhandle, 0);
+    pactffi_verifier_set_provider_info(verifierhandle, name, scheme, host, port, path);
+    pactffi_verifier_add_provider_transport(verifierhandle, protocol, port, path, scheme);
+    if (!enif_is_binary(env, argv[9]))
+    {
+        return enif_make_badarg(env);
+    }
+
+    char *state_path = convert_erl_binary_to_c_string(env, argv[9]);
+    if (state_path[0] != '\0')
+    {
+        pactffi_verifier_set_provider_state(verifierhandle, state_path, 0, 1);
+    }
+    pactffi_verifier_set_verification_options(verifierhandle, 0, 5000),
+    pactffi_verifier_set_publish_options(verifierhandle, version, NULL, NULL, -1, branch);
+    pactffi_verifier_url_source(
+        verifierhandle,
+        pact_url,
+        NULL,
+        NULL,
+        NULL
+        );
+    setenv("PACT_DO_NOT_TRACK", "true", 1);
+    int output = pactffi_verifier_execute(verifierhandle);
+    pactffi_verifier_shutdown(verifierhandle);
+
+
+    // ErlNifPid pid;
+
+    // enif_get_local_pid(env, argv[9], &pid);
+
+    // ERL_NIF_TERM message = enif_make_int(env, output);
+
+    // enif_send(env, &pid, NULL, message);
+
+    return enif_make_int(env, output);
+}
+
 static ERL_NIF_TERM verify_via_broker(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
     if (!enif_is_binary(env, argv[0]))
@@ -870,6 +963,11 @@ static ERL_NIF_TERM schedule_async_file_verify(ErlNifEnv* env, int argc, const E
     return enif_schedule_nif(env, "verify_via_file", ERL_NIF_DIRTY_JOB_IO_BOUND, verify_via_file, argc, argv);
 }
 
+static ERL_NIF_TERM schedule_async_url_verify(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
+    // ERL_NIF_DIRTY_JOB_IO_BOUND
+    return enif_schedule_nif(env, "verify_via_url", ERL_NIF_DIRTY_JOB_IO_BOUND, verify_via_url, argc, argv);
+}
+
 static ERL_NIF_TERM schedule_async_broker_verify(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
     // ERL_NIF_DIRTY_JOB_IO_BOUND
     // return verify_via_broker(env, argc, argv);
@@ -907,7 +1005,8 @@ static ErlNifFunc nif_funcs[] =
         {"schedule_async_file_verify", 10, schedule_async_file_verify},
         {"schedule_async_broker_verify", 16, schedule_async_broker_verify},
         {"verify_via_broker", 16, verify_via_broker},
-        {"verify_via_file", 10, verify_via_file}
+        {"verify_via_file", 10, verify_via_file},
+        {"verify_via_url", 10, verify_via_url}
     };
 
 ERL_NIF_INIT(pactffi_nif, nif_funcs, NULL, NULL, NULL, NULL)
