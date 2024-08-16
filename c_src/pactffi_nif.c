@@ -810,8 +810,14 @@ static ERL_NIF_TERM verify_via_url(ErlNifEnv *env, int argc, const ERL_NIF_TERM 
     }
     char *broker_password = convert_erl_binary_to_c_string(env, argv[11]);
 
+    if (!enif_is_binary(env, argv[12]))
+    {
+        return enif_make_badarg(env);
+    }
+    char *build_url = convert_erl_binary_to_c_string(env, argv[12]);
+
     pactffi_verifier_set_verification_options(verifierhandle, 0, 5000),
-    pactffi_verifier_set_publish_options(verifierhandle, version, NULL, NULL, -1, branch);
+    pactffi_verifier_set_publish_options(verifierhandle, version, build_url, NULL, -1, branch);
     pactffi_verifier_url_source(
         verifierhandle,
         pact_url,
@@ -1019,7 +1025,7 @@ static ErlNifFunc nif_funcs[] =
         {"schedule_async_broker_verify", 16, schedule_async_broker_verify},
         {"verify_via_broker", 16, verify_via_broker},
         {"verify_via_file", 10, verify_via_file},
-        {"verify_via_url", 12, verify_via_url}
+        {"verify_via_url", 13, verify_via_url}
     };
 
 ERL_NIF_INIT(pactffi_nif, nif_funcs, NULL, NULL, NULL, NULL)

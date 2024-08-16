@@ -165,6 +165,7 @@ verify_pacts(VerifierRef, ProviderOpts, ProviderPortDetails) ->
     IncludeWipPactsSince = maps:get(include_wip_pacts_since, ProviderOpts, <<"">>),
     SkipPublish = maps:get(skip_publish, ProviderOpts, <<"0">>),
     Scheme = maps:get(scheme, ProviderOpts, <<"http">>),
+    BuildUrl = maps:get(build_url, ProviderOpts, <<"">>),
     FilePath = maps:get(file_path, PactSourceOpts, undefined),
     PactUrl = maps:get(pact_url, PactSourceOpts, undefined),
     PactBrokerUrl = maps:get(broker_url, PactSourceOpts, undefined),
@@ -229,7 +230,8 @@ verify_pacts(VerifierRef, ProviderOpts, ProviderPortDetails) ->
                         Protocol,
                         StateChangeUrl,
                         BrokerUser,
-                        BrokerPassword
+                        BrokerPassword,
+                        BuildUrl
                     ],
                 PactUrlArgsString =
                     lists:foldl(
