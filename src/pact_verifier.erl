@@ -168,12 +168,12 @@ verify_pacts(VerifierRef, ProviderOpts, ProviderPortDetails) ->
     FilePath = maps:get(file_path, PactSourceOpts, undefined),
     PactBrokerUrl = maps:get(broker_url, PactSourceOpts, undefined),
     EscriptPath = code:priv_dir(pact_erlang) ++ "/pact_escript.escript",
-    Output1 =
+    FilePathOutput =
         case FilePath of
             undefined ->
                 0;
             _ ->
-                Args =
+                FilePathArgs =
                     [
                         Name,
                         Scheme,
@@ -186,7 +186,7 @@ verify_pacts(VerifierRef, ProviderOpts, ProviderPortDetails) ->
                         Protocol,
                         StateChangeUrl
                     ],
-                ArgsString =
+                FilePathArgsString =
                     lists:foldl(
                         fun(Arg, Acc) ->
                             A =
@@ -199,15 +199,15 @@ verify_pacts(VerifierRef, ProviderOpts, ProviderPortDetails) ->
                             Acc ++ " " ++ A
                         end,
                         "",
-                        Args
+                        FilePathArgs
                     ),
-                {Output, OutputLog} = pact_utils:run_executable_async(
-                    EscriptPath ++ " pactffi_nif verify_file_pacts " ++ ArgsString
+                {FilePathExecOutput, FilePathExecOutputLog} = pact_utils:run_executable_async(
+                    EscriptPath ++ " pactffi_nif verify_file_pacts " ++ FilePathArgsString
                 ),
-                io:format(OutputLog),
-                Output
+                io:format(FilePathExecOutputLog),
+                FilePathExecOutput
         end,
-    Output2 =
+    PactBrokerOutput =
         case PactBrokerUrl of
             undefined ->
                 0;
@@ -216,7 +216,7 @@ verify_pacts(VerifierRef, ProviderOpts, ProviderPortDetails) ->
                 BrokerPassword = maps:get(broker_password, PactSourceOpts, <<"password">>),
                 EnablePending = maps:get(enable_pending, PactSourceOpts, <<"0">>),
                 ConsumerVersionSelectors = maps:get(consumer_version_selectors, PactSourceOpts, undefined),
-                Args1 = [
+                PactBrokerArgs = [
                     Name,
                     Scheme,
                     Host,
@@ -234,7 +234,7 @@ verify_pacts(VerifierRef, ProviderOpts, ProviderPortDetails) ->
                     SkipPublish,
                     IncludeWipPactsSince
                 ],
-                ArgsString1 =
+                PactBrokerArgsString =
                     lists:foldl(
                         fun(Arg, Acc) ->
                             A =
@@ -247,13 +247,13 @@ verify_pacts(VerifierRef, ProviderOpts, ProviderPortDetails) ->
                             Acc ++ " " ++ A
                         end,
                         "",
-                        Args1
+                        PactBrokerArgs
                     ),
-                {Output3, OutputLog3} = pact_utils:run_executable_async(
-                    EscriptPath ++ " pactffi_nif verify_broker_pacts " ++ ArgsString1
+                {PactBrokerExecOutput, PactBrokerExecOutputLog} = pact_utils:run_executable_async(
+                    EscriptPath ++ " pactffi_nif verify_broker_pacts " ++ PactBrokerArgsString
                 ),
-                io:format(OutputLog3),
-                Output3
+                io:format(PactBrokerExecOutputLog),
+                PactBrokerExecOutput
         end,
     case Protocol of
         <<"message">> ->
@@ -262,7 +262,7 @@ verify_pacts(VerifierRef, ProviderOpts, ProviderPortDetails) ->
         _ ->
             stop_verifier(VerifierRef)
     end,
-    combine_return_codes(Output1, Output2).
+    combine_return_codes(FilePathOutput, PactBrokerOutput).
 
 combine_return_codes(0, 0) -> 0;
 combine_return_codes(Code1, _) when Code1 =/= 0 -> Code1;
