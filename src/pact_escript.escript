@@ -30,6 +30,28 @@ main([Module, Function | Args]) ->
                 false ->
                     AList
             end;
+        verify_url_pacts ->
+            {AList, _} =
+            lists:foldl(
+                fun(Arg, {Acc, CountAcc}) ->
+                    A =
+                    case CountAcc of
+                        3 ->
+                            list_to_integer(Arg);
+                        _ ->
+                            list_to_binary(Arg)
+                    end,
+                    {Acc ++ [A], CountAcc + 1}
+                end,
+                {[], 0},
+                Args
+            ),
+            case length(AList) < 13 of
+                true ->
+                    AList ++ [<<"">>];
+                false ->
+                    AList
+            end;
         verify_broker_pacts ->
             {AList1, _} =
             lists:foldl(

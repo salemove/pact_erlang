@@ -165,15 +165,20 @@ verify_pacts(VerifierRef, ProviderOpts, ProviderPortDetails) ->
     IncludeWipPactsSince = maps:get(include_wip_pacts_since, ProviderOpts, <<"">>),
     SkipPublish = maps:get(skip_publish, ProviderOpts, <<"0">>),
     Scheme = maps:get(scheme, ProviderOpts, <<"http">>),
+    BuildUrl = maps:get(build_url, ProviderOpts, <<"">>),
     FilePath = maps:get(file_path, PactSourceOpts, undefined),
+    PactUrl = maps:get(pact_url, PactSourceOpts, undefined),
     PactBrokerUrl = maps:get(broker_url, PactSourceOpts, undefined),
+    BrokerUser = maps:get(broker_username, PactSourceOpts, <<"username">>),
+    BrokerPassword = maps:get(broker_password, PactSourceOpts, <<"password">>),
     EscriptPath = code:priv_dir(pact_erlang) ++ "/pact_escript.escript",
-    Output1 =
+    
+    FilePathOutput =
         case FilePath of
             undefined ->
                 0;
             _ ->
-                Args =
+                FilePathArgs =
                     [
                         Name,
                         Scheme,
@@ -186,7 +191,7 @@ verify_pacts(VerifierRef, ProviderOpts, ProviderPortDetails) ->
                         Protocol,
                         StateChangeUrl
                     ],
-                ArgsString =
+                FilePathArgsString =
                     lists:foldl(
                         fun(Arg, Acc) ->
                             A =
@@ -199,24 +204,64 @@ verify_pacts(VerifierRef, ProviderOpts, ProviderPortDetails) ->
                             Acc ++ " " ++ A
                         end,
                         "",
-                        Args
+                        FilePathArgs
                     ),
-                {Output, OutputLog} = pact_utils:run_executable_async(
-                    EscriptPath ++ " pactffi_nif verify_file_pacts " ++ ArgsString
+                {FilePathExecOutput, FilePathExecOutputLog} = pact_utils:run_executable_async(
+                    EscriptPath ++ " pactffi_nif verify_file_pacts " ++ FilePathArgsString
                 ),
-                io:format(OutputLog),
-                Output
+                io:format(FilePathExecOutputLog),
+                FilePathExecOutput
         end,
-    Output2 =
+    PactUrlOutput =
+        case PactUrl of
+            undefined ->
+                0;
+            _ ->
+                PactUrlArgs =
+                    [
+                        Name,
+                        Scheme,
+                        Host,
+                        Port,
+                        BaseUrl,
+                        Version,
+                        Branch,
+                        PactUrl,
+                        Protocol,
+                        StateChangeUrl,
+                        BrokerUser,
+                        BrokerPassword,
+                        BuildUrl
+                    ],
+                PactUrlArgsString =
+                    lists:foldl(
+                        fun(Arg, Acc) ->
+                            A =
+                                case Arg of
+                                    X when is_integer(X) ->
+                                        integer_to_list(X);
+                                    _ ->
+                                        binary_to_list(Arg)
+                                end,
+                            Acc ++ " " ++ A
+                        end,
+                        "",
+                        PactUrlArgs
+                    ),
+                {PactUrlExecOutput, PactUrlExecOutputLog} = pact_utils:run_executable_async(
+                    EscriptPath ++ " pactffi_nif verify_url_pacts " ++ PactUrlArgsString
+                ),
+                io:format(PactUrlExecOutputLog),
+                PactUrlExecOutput
+        end,
+    PactBrokerOutput =
         case PactBrokerUrl of
             undefined ->
                 0;
             _ ->
-                BrokerUser = maps:get(broker_username, PactSourceOpts, <<"username">>),
-                BrokerPassword = maps:get(broker_password, PactSourceOpts, <<"password">>),
                 EnablePending = maps:get(enable_pending, PactSourceOpts, <<"0">>),
                 ConsumerVersionSelectors = maps:get(consumer_version_selectors, PactSourceOpts, undefined),
-                Args1 = [
+                PactBrokerArgs = [
                     Name,
                     Scheme,
                     Host,
@@ -234,7 +279,7 @@ verify_pacts(VerifierRef, ProviderOpts, ProviderPortDetails) ->
                     SkipPublish,
                     IncludeWipPactsSince
                 ],
-                ArgsString1 =
+                PactBrokerArgsString =
                     lists:foldl(
                         fun(Arg, Acc) ->
                             A =
@@ -247,13 +292,13 @@ verify_pacts(VerifierRef, ProviderOpts, ProviderPortDetails) ->
                             Acc ++ " " ++ A
                         end,
                         "",
-                        Args1
+                        PactBrokerArgs
                     ),
-                {Output3, OutputLog3} = pact_utils:run_executable_async(
-                    EscriptPath ++ " pactffi_nif verify_broker_pacts " ++ ArgsString1
+                {PactBrokerExecOutput, PactBrokerExecOutputLog} = pact_utils:run_executable_async(
+                    EscriptPath ++ " pactffi_nif verify_broker_pacts " ++ PactBrokerArgsString
                 ),
-                io:format(OutputLog3),
-                Output3
+                io:format(PactBrokerExecOutputLog),
+                PactBrokerExecOutput
         end,
     case Protocol of
         <<"message">> ->
@@ -262,11 +307,12 @@ verify_pacts(VerifierRef, ProviderOpts, ProviderPortDetails) ->
         _ ->
             stop_verifier(VerifierRef)
     end,
-    combine_return_codes(Output1, Output2).
+    combine_return_codes(FilePathOutput, PactUrlOutput, PactBrokerOutput).
 
-combine_return_codes(0, 0) -> 0;
-combine_return_codes(Code1, _) when Code1 =/= 0 -> Code1;
-combine_return_codes(_, Code2) -> Code2.
+combine_return_codes(0, 0, 0) -> 0;
+combine_return_codes(Code1, _, _) when Code1 =/= 0 -> Code1;
+combine_return_codes(_, Code2, _) when Code2 =/= 0 -> Code2;
+combine_return_codes(_, _, Code3) -> Code3.
 
 extract_address_port(Url) ->
     % Define a regex pattern to match the address and port
